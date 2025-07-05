@@ -14,6 +14,19 @@ class MongoBaseModel(BaseModel):
         json_encoders = {ObjectId: str}
 
 
+class CommentBase(BaseModel):
+    publication_date: datetime = Field(default_factory=datetime.now)
+    content: str
+
+
+class CommentCreate(CommentBase):
+    pass
+
+
+class Comment(CommentBase):
+    pass
+
+
 class PostBase(MongoBaseModel):
     title: str
     content: str
@@ -30,4 +43,4 @@ class PostCreate(PostBase):
 
 
 class Post(PostBase):
-    pass
+    comments: list[Comment] = Field(default_factory=list)

@@ -3,7 +3,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from database import get_database
-from models import Post, PostCreate, PostPartialUpdate
+from models import Post, PostCreate, PostPartialUpdate, CommentCreate
 
 app = FastAPI()
 
@@ -86,3 +86,20 @@ async def delete_post(
     database: AsyncIOMotorDatabase = Depends(get_database),
 ):
     await database["posts"].delete_one({"_id": post.id})
+
+
+@app.post(
+    "/posts/{id}/comments", response_model=Post, status_code=status.HTTP_201_CREATED
+)
+async def create_comment(
+    comment: CommentCreate,
+    post: Post = Depends(get_post_or_404),
+    database: AsyncIOMotorDatabase = Depends(get_database),
+) -> Post:
+    await database["posts"].update_one(
+        {"_id": post.id}, {"$push": {"comments": comment.dict()}}
+    )
+
+    post = await get_post_or_404(post.id, database)
+
+    return post
