@@ -4,13 +4,20 @@ from bson import ObjectId
 from pydantic import BaseModel, Field, BeforeValidator
 
 
-PyObjectId = Annotated[str, BeforeValidator(str)]
+# Helper to parse ObjectId to/from string
+def parse_object_id(value: str | ObjectId) -> str:
+    if isinstance(value, ObjectId):
+        return str(value)
+    return str(value)
 
+# Annotated type for ObjectId fields
+PyObjectId = Annotated[str, BeforeValidator(parse_object_id)]
 
 class MongoBaseModel(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    id: PyObjectId = Field(default_factory=lambda: str(ObjectId()), alias="_id")
 
     class Config:
+        populate_by_name = True  # Allows using `id` when creating models
         json_encoders = {ObjectId: str}
 
 
