@@ -1,24 +1,15 @@
 from datetime import datetime
 from typing import Annotated
 from bson import ObjectId
-from pydantic import BaseModel, Field, BeforeValidator
+from pydantic import BaseModel, Field, BeforeValidator, ConfigDict
 
 
-# Helper to parse ObjectId to/from string
-def parse_object_id(value: str | ObjectId) -> str:
-    if isinstance(value, ObjectId):
-        return str(value)
-    return str(value)
-
-# Annotated type for ObjectId fields
-PyObjectId = Annotated[str, BeforeValidator(parse_object_id)]
+PyObjectId = Annotated[str, BeforeValidator(str)]
 
 class MongoBaseModel(BaseModel):
     id: PyObjectId = Field(default_factory=lambda: str(ObjectId()), alias="_id")
 
-    class Config:
-        populate_by_name = True  # Allows using `id` when creating models
-        json_encoders = {ObjectId: str}
+    model_config = ConfigDict(populate_by_name = True, json_encoders = {ObjectId: str})
 
 
 class CommentBase(BaseModel):
